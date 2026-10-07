@@ -2,6 +2,11 @@ import {Timer, formatTime, MAX_TIME} from './timer.js';
 const $ = id => document.getElementById(id);
 const timer = new Timer();
 let target=8880, kind='challenge', sound=false, audio=null, frame=null;
+let holdOpened=false, ignoreBackdropUntil=0;
+function releaseHold(){if(holdOpened){ignoreBackdropUntil=performance.now()+500;holdOpened=false;}}
+document.addEventListener('pointerup',releaseHold,true);
+document.addEventListener('pointercancel',releaseHold,true);
+document.addEventListener('keyup',e=>{if([' ','Enter'].includes(e.key))releaseHold();},true);
 const svgNS='http://www.w3.org/2000/svg';
 for(let n=0;n<60;n++){
  const angle=n*Math.PI/30, major=n%5===0, outer=145, inner=major?135:140;
@@ -39,7 +44,7 @@ for(const button of document.querySelectorAll('[data-mode]'))button.addEventList
 $('sound').addEventListener('click',()=>{sound=!sound;$('sound').setAttribute('aria-pressed',String(sound));$('sound').setAttribute('aria-label',sound?'关闭提示音':'开启提示音');$('sound').classList.toggle('sound-on',sound);prepareAudio();});
 for(const dialog of document.querySelectorAll('dialog')){
  dialog.querySelector('.close').addEventListener('click',()=>dialog.close());
- dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
+ dialog.addEventListener('click',event=>{if(event.target===dialog){if(holdOpened||performance.now()<ignoreBackdropUntil)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
 }
 function selectKind(next){kind=next;for(const b of document.querySelectorAll('[data-kind]'))b.setAttribute('aria-pressed',String(b.dataset.kind===kind));
  const speed=kind==='speed';$('display-field').hidden=!speed;$('fake-display').disabled=!speed;
@@ -59,13 +64,13 @@ function openDirector(){
 }
 let hold=null, origin=null;
 function cancelHold(){clearTimeout(hold);hold=null;origin=null;}
-function startHold(){if(hold!==null)return;hold=setTimeout(()=>{hold=null;openDirector();},3000);}
+function startHold(){if(hold!==null)return;hold=setTimeout(()=>{hold=null;holdOpened=true;openDirector();},3000);}
 $('title').addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();origin={x:e.clientX,y:e.clientY};$('title').setPointerCapture(e.pointerId);startHold();});
 $('title').addEventListener('pointermove',e=>{if(origin&&Math.hypot(e.clientX-origin.x,e.clientY-origin.y)>24)cancelHold();});
 for(const name of ['pointerup','pointercancel','lostpointercapture'])$('title').addEventListener(name,cancelHold);
 $('title').addEventListener('contextmenu',e=>e.preventDefault());
 $('title').addEventListener('keydown',e=>{if([' ','Enter'].includes(e.key)){e.preventDefault();if(!e.repeat)startHold();}});
-$('title').addEventListener('keyup',cancelHold);$('title').addEventListener('blur',cancelHold);
+$('title').addEventListener('keyup',()=>{holdOpened=false;cancelHold();});$('title').addEventListener('blur',cancelHold);
 window.addEventListener('blur',cancelHold);
 $('director-form').addEventListener('submit',e=>{e.preventDefault();try{const rule={kind,value:Math.round(Number($('secret-value').value)*1000),display:Math.round(Number($('fake-display').value)*1000),round:$('schedule').value==='round'?Number($('round').value):1,repeat:$('schedule').value==='every'};timer.configure(rule);if(kind==='challenge')target=rule.value;$('director').close();render();}catch(error){$('director-error').textContent=error.message;}});
 $('disable-prank').addEventListener('click',()=>{timer.clearRule();timer.rounds=0;reset();$('director').close();});
