@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8fafc"><meta name="description" content="简洁好用的在线秒表与倒计时。手机、电脑打开即用。">
+<title>计时器 · TrickTimer</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="app">
+ <header class="header">
+  <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 2h6M12 7v6l3 2M19 5l2 2"/><circle cx="12" cy="14" r="8"/></svg>
+  <h1><button id="title" class="title" type="button">计时器</button></h1>
+  <button id="sound" class="icon-button" aria-label="开启提示音" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4V4ZM16 8c2 2 2 6 0 8M19 5c4 4 4 10 0 14"/><path class="mute-line" d="m3 3 18 18"/></svg></button>
+ </header>
+ <nav class="segments mode-tabs" aria-label="计时工具"><span class="segment-indicator"></span><button data-mode="stopwatch" aria-pressed="true">秒表</button><button data-mode="countdown" aria-pressed="false">倒计时</button></nav>
+ <section class="timer-area" aria-label="计时显示">
+  <div class="dial">
+   <svg class="dial-art" viewBox="0 0 320 320" aria-hidden="true"><circle class="dial-outline" cx="160" cy="160" r="153"/><g id="ticks"></g><circle id="progress" cx="160" cy="160" r="153"/><circle id="marker" cx="160" cy="7" r="3"/></svg>
+   <div class="readout"><div id="time" role="timer" aria-label="当前时间">00.00</div><span id="unit">秒</span><span id="status"></span></div>
+  </div>
+  <button id="time-setting" class="setting-pill">目标 <span id="setting-value">8.88 秒</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15v5Z"/></svg></button>
+ </section>
+ <div class="controls"><button id="reset" class="button secondary">重置</button><button id="toggle" class="button primary"><span id="toggle-icon" aria-hidden="true">▶</span><span id="toggle-label">开始</span></button></div>
+ <footer>专注此刻，把握每一秒</footer>
+</main>
+<dialog id="director" class="sheet">
+ <div class="sheet-handle" aria-hidden="true"></div>
+ <div class="sheet-heading"><h2>导演设置</h2><button class="icon-button close" aria-label="关闭导演设置">×</button></div>
+ <form id="director-form">
+  <div class="segments prank-tabs" aria-label="整蛊玩法"><button type="button" data-kind="challenge" aria-pressed="true">挑战必中</button><button type="button" data-kind="speed" aria-pressed="false">变速倒计时</button><button type="button" data-kind="fixed" aria-pressed="false">固定结果</button></div>
+  <p id="prank-description" class="description">指定那一轮，无论何时暂停，都命中目标。</p>
+  <label class="field" id="display-field" hidden><span>显示时长</span><span class="input-wrap"><input id="fake-display" type="number" min="0.01" max="5999.99" step="0.01" value="180" required><span>秒</span></span></label>
+  <label class="field"><span id="secret-value-label">目标时间</span><span class="input-wrap"><input id="secret-value" type="number" min="0.01" max="5999.99" step="0.01" value="8.88" required><span>秒</span></span></label>
+  <label class="field"><span>生效方式</span><select id="schedule"><option value="next">下一轮</option><option value="round">指定轮次</option><option value="every">每一轮</option></select></label>
+  <label class="field" id="round-field" hidden><span>第几轮</span><span class="input-wrap"><input id="round" type="number" min="1" max="999" step="1" value="3" required><span>轮</span></span></label>
+  <p id="director-state" class="state-note">当前未开启整蛊</p>
+  <p class="fine-print">保存后重新计时，从第 1 轮开始。刷新网页恢复正常。</p>
+  <p id="director-error" class="error" role="alert"></p>
+  <button class="button primary full" type="submit">保存并返回</button>
+  <button id="disable-prank" class="text-button" type="button">关闭整蛊并重新计时</button>
+ </form>
+</dialog>
+<dialog id="public-settings" class="sheet compact">
+ <div class="sheet-handle" aria-hidden="true"></div><div class="sheet-heading"><h2 id="public-heading">挑战目标</h2><button class="icon-button close" aria-label="关闭时间设置">×</button></div>
+ <form id="public-form"><label class="field"><span id="public-label">目标时间</span><span class="input-wrap"><input id="public-value" type="number" min="0.01" max="5999.99" step="0.01" required value="8.88"><span>秒</span></span></label><p class="fine-print">可输入小数，最长 99 分 59.99 秒。</p><p id="public-error" class="error" role="alert"></p><button class="button primary full" type="submit">完成</button><button id="remove-target" class="text-button" type="button">关闭挑战目标</button></form>
+</dialog>
+<script type="module" src="app.js"></script>
+</body></html>

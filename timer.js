@@ -1,7 +1,7 @@
-const MAX = 599999;
-function duration(value) { if (!Number.isFinite(value) || value <= 0 || value > MAX) throw new RangeError('时间须大于 0，且不超过 99 分 59.99 秒'); }
+export const MAX_TIME = 5999990;
+function duration(value) { if (!Number.isFinite(value) || value <= 0 || value > MAX_TIME) throw new RangeError('时间须大于 0，且不超过 99 分 59.99 秒'); }
 export function formatTime(ms) {
- const ticks = Math.floor(Math.max(0, Math.min(MAX, ms)) / 10);
+ const ticks = Math.floor(Math.max(0, Math.min(MAX_TIME, ms)) / 10);
  const seconds = Math.floor(ticks / 100) % 60;
  const minutes = Math.floor(ticks / 6000);
  return `${minutes ? String(minutes).padStart(2,'0') + ':' : ''}${String(seconds).padStart(2,'0')}.${String(ticks % 100).padStart(2,'0')}`;
@@ -23,8 +23,8 @@ export class Timer {
   this.forced=null;this.startedAt=this.now();this.running=true;
  }
  elapsedNow(){return this.elapsed+(this.running?this.now()-this.startedAt:0);}
- value(){if(this.forced!==null)return this.forced;const ms=this.elapsedNow();return this.mode==='countdown'?Math.max(0,this.display-ms*this.display/this.actual):Math.min(MAX,ms);}
- countRound(){if(this.counted)return;this.counted=true;const r=this.rule;const applicable=r && (r.kind==='speed'?this.mode==='countdown':this.mode==='stopwatch');if(applicable)this.rounds++;if(this.activeRule&&!this.activeRule.repeat)this.rule=null;}
+ value(){if(this.forced!==null)return this.forced;const ms=this.elapsedNow();return this.mode==='countdown'?Math.max(0,this.display-ms*this.display/this.actual):Math.min(MAX_TIME,ms);}
+ countRound(){if(this.counted)return;this.counted=true;const r=this.rule;const applicable=r && (r.kind==='speed'?this.mode==='countdown':this.mode==='stopwatch');if(!r||applicable)this.rounds++;if(this.activeRule&&!this.activeRule.repeat)this.rule=null;}
  pause(){if(!this.running)return this.value();this.elapsed=this.elapsedNow();this.running=false;if(this.activeRule&&this.mode==='stopwatch')this.forced=this.activeRule.value;this.countRound();return this.value();}
  finish(){if(this.finished)return;this.pause();this.finished=true;}
 }
