@@ -19,3 +19,19 @@ test('reject nonfinite, zero, overlong and fractional round settings',()=>{const
 test('format uses hundredths and supports minutes',()=>{assert.equal(formatTime(8880),'08.88');assert.equal(formatTime(65010),'01:05.01');assert.equal(formatTime(-1),'00.00');});
 
 test('accepts ten minutes through 99 minutes 59.99 seconds',()=>{const {timer:t}=setup();t.setMode('countdown',600000);assert.equal(t.value(),600000);t.configure({kind:'fixed',value:5999990,round:1});t.start();assert.equal(t.pause(),5999990);assert.equal(formatTime(5999990),'99:59.99');});
+
+test('whole-second prank lingers in previous second for an extra half second',()=>{
+ const {timer:t,advance:a}=setup();t.configure({kind:'challenge',value:3000,round:1});t.start();a(2000);assert.equal(t.value(),2000);a(1000);assert.ok(t.value()>=2000&&t.value()<3000);a(499);assert.ok(t.value()<3000);a(1);assert.equal(t.value(),3000);a(250);assert.equal(t.value(),3250);
+});
+test('fractional targets keep their integer second and reach target after half-second delay',()=>{
+ for(const value of [3250,3500,8880]){const {timer:t,advance:a}=setup();t.configure({kind:'fixed',value,round:1});t.start();a(value);assert.equal(Math.floor(t.value()/1000),Math.floor(value/1000));assert.ok(t.value()<value);a(500);assert.equal(t.value(),value);assert.equal(t.pause(),value);}
+});
+test('slowdown stays continuous and never moves digits backwards',()=>{
+ const {timer:t,advance:a}=setup();t.configure({kind:'challenge',value:3000,round:1});t.start();let previous=0;for(let i=0;i<400;i++){a(10);const value=t.value();assert.ok(value>=previous);assert.ok(value-previous<=10.001);previous=value;}assert.equal(t.value(),3500);
+});
+test('ordinary and non-selected rounds keep accurate time',()=>{
+ for(const configured of [false,true]){const {timer:t,advance:a}=setup();if(configured)t.configure({kind:'challenge',value:3000,round:2});t.start();a(3100);assert.equal(t.value(),3100);}
+});
+test('pause during slowdown still lands exactly on target and consumed rule stays off next run',()=>{
+ const {timer:t,advance:a}=setup();t.configure({kind:'challenge',value:5000,round:1});t.start();a(5250);assert.ok(t.value()<5000);assert.equal(t.pause(),5000);t.reset();t.start();a(5250);assert.equal(t.value(),5250);
+});
